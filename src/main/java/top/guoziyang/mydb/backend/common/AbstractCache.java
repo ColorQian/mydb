@@ -1,5 +1,7 @@
 package top.guoziyang.mydb.backend.common;
 
+import top.guoziyang.mydb.common.Error;
+
 import java.util.HashMap;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
@@ -7,6 +9,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * AbstractCache 实现了一个引用计数策略的缓存
+ * 一个简单的缓存框架: 其它的缓存只需要继承这个类, 并实现抽象方法getForCache()、releaseForCache()
  */
 public abstract class AbstractCache<T> {
     private HashMap<Long, T> cache;                     // 实际缓存的数据
@@ -53,7 +56,7 @@ public abstract class AbstractCache<T> {
                 lock.unlock();
                 throw Error.CacheFullException;
             }
-            count ++;
+            count++;
             getting.put(key, true);
             lock.unlock();
             break;
@@ -64,7 +67,7 @@ public abstract class AbstractCache<T> {
             obj = getForCache(key);
         } catch(Exception e) {
             lock.lock();
-            count --;
+            count--;
             getting.remove(key);
             lock.unlock();
             throw e;
@@ -123,8 +126,9 @@ public abstract class AbstractCache<T> {
      * 当资源不在缓存时的获取行为
      */
     protected abstract T getForCache(long key) throws Exception;
+
     /**
-     * 当资源被驱逐时的写回行为
+     * 当资源被从缓存剔除时的写回行为
      */
     protected abstract void releaseForCache(T obj);
 }
